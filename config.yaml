@@ -1,0 +1,4 @@
+servers:
+  - tcp://localhost:1883
+client_id: gombus2mqtt
+topic: mbus/value
