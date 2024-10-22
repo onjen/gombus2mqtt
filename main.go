@@ -36,10 +36,8 @@ func main() {
 	defer ticker.Stop()
 
 	for {
-		select {
-		case <-ticker.C:
-			go fetchAndPublish(client, config.Topic)
-		}
+		<-ticker.C
+		go fetchAndPublish(client, config.Topic)
 	}
 }
 
