@@ -21,7 +21,10 @@ func parseConfig(filename string) (*Config, error) {
 	}
 	defer file.Close()
 
-	yaml.NewDecoder(file).Decode(&c)
+	err = yaml.NewDecoder(file).Decode(&c)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to decode yaml %v", err)
+	}
 
 	return &c, nil
 }
