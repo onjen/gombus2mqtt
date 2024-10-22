@@ -25,3 +25,5 @@ go.work.sum
 .env
 
 gombus2mqtt
+
+dist/
