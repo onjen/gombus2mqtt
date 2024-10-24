@@ -8,9 +8,13 @@ import (
 )
 
 type Config struct {
-	Servers  []string `yaml:"servers"`
-	ClientID string   `yaml:"client_id"`
-	Topic    string   `yaml:"topic"`
+	Servers     []string `yaml:"servers"`
+	ClientID    string   `yaml:"client_id"`
+	TopicPrefix string   `yaml:"topic_prefix"`
+	User        string   `yaml:"user"`
+	Password    string   `yaml:"password"`
+	Device      string   `yaml:"device"`
+	Address     int      `yaml:"address"`
 }
 
 func parseConfig(filename string) (*Config, error) {
