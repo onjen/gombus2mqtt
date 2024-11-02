@@ -13,6 +13,11 @@ import (
 
 var debugFlag = flag.Bool("d", false, "Set loglevel to debug")
 
+type Application struct {
+	client mqtt.Client
+	config *Config
+}
+
 func main() {
 	flag.Parse()
 	if *debugFlag {
@@ -33,12 +38,19 @@ func main() {
 		log.Fatalf("Failed to connect to the broker: %v", token.Error())
 	}
 
-	// Send periodic updates
+	app := Application{
+		client: client,
+		config: config,
+	}
+
+	// Publish retained discovery topics
+
+	// Publish periodic updates
 	ticker := time.NewTicker(time.Duration(config.IntervalSec) * time.Second)
 	defer ticker.Stop()
 	for {
 		<-ticker.C
-		go fetchAndPublish(client, config.TopicPrefix, config.Device, config.Address)
+		go app.fetchAndPublish()
 	}
 }
 
@@ -60,8 +72,8 @@ func createMQTTClient(config Config) (mqtt.Client, error) {
 	return client, nil
 }
 
-func fetchAndPublish(client mqtt.Client, topicPrefix string, device string, address int) {
-	frame, err := fetchValue(device, address)
+func (app *Application) fetchAndPublish() {
+	frame, err := fetchValue(app.config.Device, app.config.Address)
 	if err != nil {
 		slog.Error("Error fetching value", "Error", err)
 		return
@@ -71,10 +83,10 @@ func fetchAndPublish(client mqtt.Client, topicPrefix string, device string, addr
 		slog.Error("Error marshalling frame", "Error", err)
 		return
 	}
-	client.Publish(fmt.Sprintf("%v/raw", topicPrefix), 0, false, string(msg))
+	app.client.Publish(fmt.Sprintf("%v/raw", app.config.TopicPrefix), 0, false, string(msg))
 	for i, v := range frame.DataRecords {
-		client.Publish(fmt.Sprintf("%v/%v/unit", topicPrefix, i), 0, false, v.Unit.Unit)
-		client.Publish(fmt.Sprintf("%v/%v/value", topicPrefix, i), 0, false, fmt.Sprintf("%f", v.Value))
+		app.client.Publish(fmt.Sprintf("%v/%v/unit", app.config.TopicPrefix, i), 0, false, v.Unit.Unit)
+		app.client.Publish(fmt.Sprintf("%v/%v/value", app.config.TopicPrefix, i), 0, false, fmt.Sprintf("%f", v.Value))
 	}
 	slog.Debug("Fetched new value and published to MQTT", "device", frame.DeviceType, "manufacturer", frame.Manufacturer)
 }
