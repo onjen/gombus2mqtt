@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
+	"os"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -41,7 +42,12 @@ func main() {
 		slog.SetLogLoggerLevel(slog.LevelDebug)
 	}
 
-	config, err := parseConfig("config.yaml")
+	val, ok := os.LookupEnv("CONFFILE")
+	if !ok {
+		val = "config.yaml"
+	}
+	config, err := parseConfig(val)
+
 	if err != nil {
 		log.Fatalf("Error parsing config: %v", err)
 	}
