@@ -1,0 +1,30 @@
+[Unit]
+Description=Publish messages from M-Bus to MQTT
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+ExecStart=/usr/bin/gombus2mqtt
+DynamicUser=yes
+Environment="CONFFILE=/etc/gombus2mqtt/config.yaml"
+SupplementaryGroups=dialout
+ProtectClock=yes
+ProtectKernelLogs=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+ProtectKernelModules=yes
+ProtectHostname=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+PrivateUsers=yes
+PrivateMounts=yes
+SystemCallArchitectures=native
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallFilter=@system-service
+LockPersonality=yes
+RestrictNamespaces=yes
+CapabilityBoundingSet=CAP_SYS_RAWIO
+
+[Install]
+WantedBy=multi-user.target

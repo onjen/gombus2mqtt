@@ -40,3 +40,7 @@ nfpms:
       - src: config.yaml
         dst: /etc/gombus2mqtt/config.yaml
         type: config
+      - src: packaging/gombus2mqtt.service
+        dst: /lib/systemd/system/gombus2mqtt.service
+    scripts:
+      postinstall: "packaging/postinstall.sh"
