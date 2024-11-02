@@ -11,7 +11,6 @@ func fetchValue(device string, address int) (*gombus.DecodedFrame, error) {
 	conn, err := gombus.DialSerial(device)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to dial serial to device %v: %v", device, err)
-
 	}
 	_, err = conn.Write(gombus.SndNKE(uint8(address)))
 	if err != nil {

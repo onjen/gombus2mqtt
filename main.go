@@ -33,9 +33,9 @@ func main() {
 		log.Fatalf("Failed to connect to the broker: %v", token.Error())
 	}
 
-	ticker := time.NewTicker(5 * time.Second)
+	// Send periodic updates
+	ticker := time.NewTicker(time.Duration(config.IntervalSec) * time.Second)
 	defer ticker.Stop()
-
 	for {
 		<-ticker.C
 		go fetchAndPublish(client, config.TopicPrefix, config.Device, config.Address)

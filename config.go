@@ -15,6 +15,7 @@ type Config struct {
 	Password    string   `yaml:"password"`
 	Device      string   `yaml:"device"`
 	Address     int      `yaml:"address"`
+	IntervalSec int      `yaml:"interval_sec"`
 }
 
 func parseConfig(filename string) (*Config, error) {
