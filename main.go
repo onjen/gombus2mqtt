@@ -105,71 +105,83 @@ func createMQTTClient(config Config) (mqtt.Client, error) {
 }
 
 func (app *Application) printRawFrame() {
-	frame, err := fetchValue(app.config.Device, app.config.Address)
-	if err != nil {
-		slog.Error("Error fetching value", "Error", err)
-		return
+	for _, meter := range app.config.Meters {
+		frame, err := fetchValue(app.config.Device, meter.Address)
+		if err != nil {
+			slog.Error("Error fetching value", "Error", err)
+			return
+		}
+		content, err := json.MarshalIndent(frame, "", "  ")
+		if err != nil {
+			slog.Error("Error marshaling frame", "Error", err)
+			return
+		}
+		fmt.Printf("Printing raw response for meter '%v' at address '%v'\n", meter.Name, meter.Address)
+		fmt.Println(string(content))
 	}
-	content, err := json.MarshalIndent(frame, "", "  ")
-	if err != nil {
-		slog.Error("Error marshaling frame", "Error", err)
-		return
-	}
-	fmt.Println(string(content))
 }
 
 func (app *Application) publishAutodiscover() {
-	frame, err := fetchValue(app.config.Device, app.config.Address)
-	if err != nil {
-		slog.Error("Error fetching value", "Error", err)
-		return
-	}
-
-	serialNumber := fmt.Sprintf("%d", frame.SerialNumber)
-	d := Device{
-		Name:         app.config.Name,
-		Manufacturer: frame.Manufacturer,
-		Model:        frame.DeviceType,
-		Identifiers:  []string{serialNumber},
-	}
-
-	for i := range frame.DataRecords {
-		if !app.config.Values[i].Publish {
-			continue
-		}
-		sensorName := app.config.Values[i].Name
-		payload := DiscoverPayload{
-			Device:        d,
-			DeviceClass:   app.config.Values[i].DeviceClass,
-			Name:          sensorName,
-			StateTopic:    fmt.Sprintf("%v/%v/%v/state", app.config.TopicPrefix, d.Name, sensorName),
-			UniqueID:      fmt.Sprintf("%s_%s", sensorName, serialNumber),
-			Unit:          app.config.Values[i].Unit,
-			ValueTemplate: "{{ value_json }}",
-		}
-		msg, err := json.Marshal(payload)
+	for _, meter := range app.config.Meters {
+		frame, err := fetchValue(app.config.Device, meter.Address)
 		if err != nil {
-			slog.Error("Error marshaling config payload", "Error", err)
+			slog.Error("Error fetching value", "Error", err)
 			return
 		}
-		app.client.Publish(fmt.Sprintf("homeassistant/sensor/%s/config", payload.UniqueID), 0, true, string(msg))
+
+		serialNumber := fmt.Sprintf("%d", frame.SerialNumber)
+		d := Device{
+			Name:         meter.Name,
+			Manufacturer: frame.Manufacturer,
+			Model:        frame.DeviceType,
+			Identifiers:  []string{serialNumber},
+		}
+
+		fields := app.config.getMeterFields(&meter)
+		for i := range frame.DataRecords {
+			if !fields[i].Publish {
+				continue
+			}
+			sensorName := fields[i].Name
+			payload := DiscoverPayload{
+				Device:        d,
+				DeviceClass:   fields[i].DeviceClass,
+				Name:          sensorName,
+				StateTopic:    fmt.Sprintf("%v/%v/%v/state", app.config.TopicPrefix, d.Name, sensorName),
+				UniqueID:      fmt.Sprintf("%s_%s", sensorName, serialNumber),
+				Unit:          fields[i].Unit,
+				ValueTemplate: "{{ value_json }}",
+			}
+			msg, err := json.Marshal(payload)
+			if err != nil {
+				slog.Error("Error marshaling config payload", "Error", err)
+				return
+			}
+			topic := fmt.Sprintf("homeassistant/sensor/%s/config", payload.UniqueID)
+			app.client.Publish(topic, 0, true, string(msg))
+			slog.Debug("Publishing autodiscover message", "topic", topic, "payload", string(msg))
+		}
 	}
 	slog.Info("Published Home Assistant autodiscover messages")
 
 }
 
 func (app *Application) fetchAndPublish() {
-	frame, err := fetchValue(app.config.Device, app.config.Address)
-	if err != nil {
-		slog.Error("Error fetching value", "Error", err)
-		return
-	}
-	for i, v := range frame.DataRecords {
-		if !app.config.Values[i].Publish {
-			continue
+	for _, meter := range app.config.Meters {
+		frame, err := fetchValue(app.config.Device, meter.Address)
+		if err != nil {
+			slog.Error("Error fetching value", "Error", err)
+			return
 		}
-		sensorName := app.config.Values[i].Name
-		app.client.Publish(fmt.Sprintf("%v/%v/%v/state", app.config.TopicPrefix, app.config.Name, sensorName), 0, false, fmt.Sprintf("%f", v.Value))
+		fields := app.config.getMeterFields(&meter)
+		for i, v := range frame.DataRecords {
+			if !fields[i].Publish {
+				continue
+			}
+			sensorName := fields[i].Name
+			topic := fmt.Sprintf("%v/%v/%v/state", app.config.TopicPrefix, meter.Name, sensorName)
+			app.client.Publish(topic, 0, false, fmt.Sprintf("%f", v.Value))
+			slog.Debug("Fetched new value and published to MQTT", "device", frame.DeviceType, "manufacturer", frame.Manufacturer, "topic", topic, "value", v.Value)
+		}
 	}
-	slog.Debug("Fetched new value and published to MQTT", "device", frame.DeviceType, "manufacturer", frame.Manufacturer)
 }
