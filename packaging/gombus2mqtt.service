@@ -6,6 +6,8 @@ Wants=network-online.target
 [Service]
 Type=exec
 ExecStart=/usr/bin/gombus2mqtt
+Restart=always
+RestartSec=5
 DynamicUser=yes
 Environment="CONFFILE=/etc/gombus2mqtt/config.yaml"
 SupplementaryGroups=dialout
