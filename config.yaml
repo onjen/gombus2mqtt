@@ -1,4 +1,4 @@
-name: meter
+---
 servers:
   - tcp://localhost:1883
 client_id: gombus2mqtt
@@ -7,63 +7,67 @@ homeassistant_autodiscover:
   enabled: true
   prefix: homeassistant
 device: /dev/ttyUSB0
-address: 0
 interval_sec: 5
-values:
-  - publish: false
-  - name:
-    unit: Wh
-    deviceClass: energy
-    publish: false
-  - name:
-    unit: date
-    deviceClass:
-    publish: false
-  - name:
-    unit: date
-    deviceClass:
-    publish: false
-  - name:
-    unit: Wh
-    deviceClass: energy
-    publish: false
-  - name:
-    unit: Wh
-    deviceClass: energy
-    publish: false
-  - name:
-    unit: date
-    deviceClass:
-    publish: false
-  - name:
-    unit: Wh
-    deviceClass: energy
-    publish: false
-  - name: Volumen
-    unit: m³
-    deviceClass: volume
-    publish: true
-  - name: Vorlauftemperatur
-    unit: °C
-    deviceClass: temperature
-    publish: true
-  - name: Ruecklauftemperatur
-    unit: °C
-    deviceClass: temperature
-    publish: true
-  - name: Temperaturdifferenz
-    unit: K
-    deviceClass: temperature
-    publish: true
-  - name: Leistung
-    unit: W
-    deviceClass: power
-    publish: true
-  - name: Durchfluss
-    unit: m³/h
-    deviceClass: volume_flow_rate
-    publish: true
-  - publish: false
-  - publish: false
-  - publish: false
-  - publish: false
+meters:
+  - name: meter1
+    adress: 0
+    template: zri_heat
+meter_templates:
+  zri_heat:
+    - publish: false
+    - name:
+      unit: Wh
+      deviceClass: energy
+      publish: false
+    - name:
+      unit: date
+      deviceClass:
+      publish: false
+    - name:
+      unit: date
+      deviceClass:
+      publish: false
+    - name:
+      unit: Wh
+      deviceClass: energy
+      publish: false
+    - name:
+      unit: Wh
+      deviceClass: energy
+      publish: false
+    - name:
+      unit: date
+      deviceClass:
+      publish: false
+    - name:
+      unit: Wh
+      deviceClass: energy
+      publish: false
+    - name: Volumen
+      unit: m³
+      deviceClass: volume
+      publish: true
+    - name: Vorlauftemperatur
+      unit: °C
+      deviceClass: temperature
+      publish: true
+    - name: Ruecklauftemperatur
+      unit: °C
+      deviceClass: temperature
+      publish: true
+    - name: Temperaturdifferenz
+      unit: K
+      deviceClass: temperature
+      publish: true
+    - name: Leistung
+      unit: W
+      deviceClass: power
+      publish: true
+    - name: Durchfluss
+      unit: m³/h
+      deviceClass: volume_flow_rate
+      publish: true
+    - publish: false
+    - publish: false
+    - publish: false
+    - publish: false

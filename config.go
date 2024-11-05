@@ -13,25 +13,30 @@ type HAAutodiscoverConfig struct {
 }
 
 // https://www.home-assistant.io/integrations/sensor/#device-class
-type Value struct {
+type Field struct {
 	Publish     bool   `yaml:"publish"`
 	Name        string `yaml:"name"`
 	DeviceClass string `yaml:"deviceClass"`
 	Unit        string `yaml:"unit"`
 }
 
+type Meter struct {
+	Address  int    `yaml:"address"`
+	Template string `yaml:"template"`
+	Name     string `yaml:"name"`
+}
+
 type Config struct {
-	Address      int                  `yaml:"address"`
-	Autodiscover HAAutodiscoverConfig `yaml:"homeassistant_autodiscover"`
-	ClientID     string               `yaml:"client_id"`
-	Device       string               `yaml:"device"`
-	IntervalSec  int                  `yaml:"interval_sec"`
-	Name         string               `yaml:"name"`
-	Password     string               `yaml:"password"`
-	Servers      []string             `yaml:"servers"`
-	TopicPrefix  string               `yaml:"topic_prefix"`
-	User         string               `yaml:"user"`
-	Values       []Value              `yaml:"values"`
+	Autodiscover   HAAutodiscoverConfig `yaml:"homeassistant_autodiscover"`
+	ClientID       string               `yaml:"client_id"`
+	Device         string               `yaml:"device"`
+	MeterTemplates map[string][]Field   `yaml:"meter_templates"`
+	IntervalSec    int                  `yaml:"interval_sec"`
+	Meters         []Meter              `yaml:"meters"`
+	Password       string               `yaml:"password"`
+	Servers        []string             `yaml:"servers"`
+	TopicPrefix    string               `yaml:"topic_prefix"`
+	User           string               `yaml:"user"`
 }
 
 func parseConfig(filename string) (*Config, error) {
@@ -47,5 +52,22 @@ func parseConfig(filename string) (*Config, error) {
 		return nil, fmt.Errorf("Failed to decode yaml %v", err)
 	}
 
+	if err = validateConfig(&c); err != nil {
+		return nil, fmt.Errorf("Failed to validate config: %v", err)
+	}
+
 	return &c, nil
+}
+
+func validateConfig(c *Config) error {
+	for _, meter := range c.Meters {
+		if _, ok := c.MeterTemplates[meter.Template]; !ok {
+			return fmt.Errorf("Field template '%v' for meter '%v' is not defined!", meter.Template, meter.Name)
+		}
+	}
+	return nil
+}
+
+func (c *Config) getMeterFields(m *Meter) []Field {
+	return c.MeterTemplates[m.Template]
 }
