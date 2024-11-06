@@ -16,7 +16,7 @@ type HAAutodiscoverConfig struct {
 type Field struct {
 	Publish     bool   `yaml:"publish"`
 	Name        string `yaml:"name"`
-	DeviceClass string `yaml:"deviceClass"`
+	DeviceClass string `yaml:"device_class"`
 	Unit        string `yaml:"unit"`
 }
 
