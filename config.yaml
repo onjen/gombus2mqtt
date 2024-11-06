@@ -8,6 +8,7 @@ homeassistant_autodiscover:
   prefix: homeassistant
 device: /dev/ttyUSB0
 interval_sec: 5
+read_timeout_ms: 500
 meters:
   - name: meter1
     adress: 0

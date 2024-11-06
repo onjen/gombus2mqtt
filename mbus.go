@@ -7,7 +7,7 @@ import (
 	"github.com/jonaz/gombus"
 )
 
-func fetchValue(device string, address int) (*gombus.DecodedFrame, error) {
+func fetchValue(device string, address int, timeout_ms time.Duration) (*gombus.DecodedFrame, error) {
 	conn, err := gombus.DialSerial(device)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to dial serial to device %v: %v", device, err)
@@ -16,7 +16,7 @@ func fetchValue(device string, address int) (*gombus.DecodedFrame, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to write NKE: %v", err)
 	}
-	err = conn.SetReadDeadline(time.Now().Add(1 * time.Second))
+	err = conn.SetReadDeadline(time.Now().Add(timeout_ms * time.Millisecond))
 	if err != nil {
 		return nil, fmt.Errorf("Failed to set read deadline: %v", err)
 	}
