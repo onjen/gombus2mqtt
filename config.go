@@ -34,6 +34,7 @@ type Config struct {
 	IntervalSec    int                  `yaml:"interval_sec"`
 	Meters         []Meter              `yaml:"meters"`
 	Password       string               `yaml:"password"`
+	ReadTimeoutMS  int                  `yaml:"read_timeout_ms"`
 	Servers        []string             `yaml:"servers"`
 	TopicPrefix    string               `yaml:"topic_prefix"`
 	User           string               `yaml:"user"`

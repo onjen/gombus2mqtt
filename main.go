@@ -13,6 +13,8 @@ import (
 )
 
 var debugFlag = flag.Bool("d", false, "Set loglevel to debug")
+var scanFlag = flag.Bool("s", false, "Run a scan to find devices")
+var printFlag = flag.Int("p", -1, "Print the response at a given primary address")
 
 type Application struct {
 	client mqtt.Client
@@ -52,22 +54,28 @@ func main() {
 		log.Fatalf("Error parsing config: %v", err)
 	}
 
+	app := Application{
+		config: config,
+	}
+
+	if *scanFlag {
+		app.scan()
+		return
+	}
+
+	if *printFlag >= 0 {
+		app.printRawFrame(*printFlag)
+		return
+	}
+
 	client, err := createMQTTClient(*config)
 	if err != nil {
 		log.Fatalf("Error creating client: %v", err)
 	}
+	app.client = client
 
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		log.Fatalf("Failed to connect to the broker: %v", token.Error())
-	}
-
-	app := Application{
-		client: client,
-		config: config,
-	}
-
-	if *debugFlag {
-		app.printRawFrame()
 	}
 
 	// Publish retained discovery topics
@@ -104,9 +112,9 @@ func createMQTTClient(config Config) (mqtt.Client, error) {
 	return client, nil
 }
 
-func (app *Application) printRawFrame() {
+func (app *Application) printRawFrame(address int) {
 	for _, meter := range app.config.Meters {
-		frame, err := fetchValue(app.config.Device, meter.Address)
+		frame, err := fetchValue(app.config.Device, address, time.Duration(app.config.ReadTimeoutMS))
 		if err != nil {
 			slog.Error("Error fetching value", "Error", err)
 			return
@@ -123,7 +131,7 @@ func (app *Application) printRawFrame() {
 
 func (app *Application) publishAutodiscover() {
 	for _, meter := range app.config.Meters {
-		frame, err := fetchValue(app.config.Device, meter.Address)
+		frame, err := fetchValue(app.config.Device, meter.Address, time.Duration(app.config.ReadTimeoutMS))
 		if err != nil {
 			slog.Error("Error fetching value", "Error", err)
 			return
@@ -168,7 +176,7 @@ func (app *Application) publishAutodiscover() {
 
 func (app *Application) fetchAndPublish() {
 	for _, meter := range app.config.Meters {
-		frame, err := fetchValue(app.config.Device, meter.Address)
+		frame, err := fetchValue(app.config.Device, meter.Address, time.Duration(app.config.ReadTimeoutMS))
 		if err != nil {
 			slog.Error("Error fetching value", "Error", err)
 			return
@@ -183,5 +191,18 @@ func (app *Application) fetchAndPublish() {
 			app.client.Publish(topic, 0, false, fmt.Sprintf("%f", v.Value))
 			slog.Debug("Fetched new value and published to MQTT", "device", frame.DeviceType, "manufacturer", frame.Manufacturer, "topic", topic, "value", v.Value)
 		}
+	}
+}
+
+func (app *Application) scan() {
+	slog.Info("Scanning for devices, this will take a while...")
+	for i := 0; i <= 250; i++ {
+		slog.Debug("Checking address", "address", i)
+		frame, err := fetchValue(app.config.Device, i, time.Duration(app.config.ReadTimeoutMS))
+		if err != nil {
+			slog.Debug("Error checking address", "address", i, "error", err)
+			continue
+		}
+		slog.Info("Found device", "primary_address", i, "serial_number", frame.SerialNumber, "manufacturer", frame.Manufacturer, "version", frame.Version, "device_type", frame.DeviceType)
 	}
 }
