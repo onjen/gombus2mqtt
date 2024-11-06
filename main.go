@@ -113,20 +113,18 @@ func createMQTTClient(config Config) (mqtt.Client, error) {
 }
 
 func (app *Application) printRawFrame(address int) {
-	for _, meter := range app.config.Meters {
-		frame, err := fetchValue(app.config.Device, address, time.Duration(app.config.ReadTimeoutMS))
-		if err != nil {
-			slog.Error("Error fetching value", "Error", err)
-			return
-		}
-		content, err := json.MarshalIndent(frame, "", "  ")
-		if err != nil {
-			slog.Error("Error marshaling frame", "Error", err)
-			return
-		}
-		fmt.Printf("Printing raw response for meter '%v' at address '%v'\n", meter.Name, meter.Address)
-		fmt.Println(string(content))
+	frame, err := fetchValue(app.config.Device, address, time.Duration(app.config.ReadTimeoutMS))
+	if err != nil {
+		slog.Error("Error fetching value", "Error", err)
+		return
 	}
+	content, err := json.MarshalIndent(frame, "", "  ")
+	if err != nil {
+		slog.Error("Error marshaling frame", "Error", err)
+		return
+	}
+	fmt.Printf("Printing raw response for meter at address '%v':\n", address)
+	fmt.Println(string(content))
 }
 
 func (app *Application) publishAutodiscover() {
