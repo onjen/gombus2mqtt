@@ -11,62 +11,62 @@ interval_sec: 5
 read_timeout_ms: 500
 meters:
   - name: meter1
-    adress: 0
+    address: 0
     template: zri_heat
 meter_templates:
   zri_heat:
     - publish: false
     - name:
       unit: Wh
-      deviceClass: energy
+      device_class: energy
       publish: false
     - name:
       unit: date
-      deviceClass:
+      device_class:
       publish: false
     - name:
       unit: date
-      deviceClass:
+      device_class:
       publish: false
     - name:
       unit: Wh
-      deviceClass: energy
+      device_class: energy
       publish: false
     - name:
       unit: Wh
-      deviceClass: energy
+      device_class: energy
       publish: false
     - name:
       unit: date
-      deviceClass:
+      device_class:
       publish: false
     - name:
       unit: Wh
-      deviceClass: energy
+      device_class: energy
       publish: false
     - name: Volumen
       unit: m³
-      deviceClass: volume
+      device_class: volume
       publish: true
     - name: Vorlauftemperatur
       unit: °C
-      deviceClass: temperature
+      device_class: temperature
       publish: true
     - name: Ruecklauftemperatur
       unit: °C
-      deviceClass: temperature
+      device_class: temperature
       publish: true
     - name: Temperaturdifferenz
       unit: K
-      deviceClass: temperature
+      device_class: temperature
       publish: true
     - name: Leistung
       unit: W
-      deviceClass: power
+      device_class: power
       publish: true
     - name: Durchfluss
       unit: m³/h
-      deviceClass: volume_flow_rate
+      device_class: volume_flow_rate
       publish: true
     - publish: false
     - publish: false
